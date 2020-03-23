@@ -19,11 +19,10 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Callable, NamedTuple, Sequence
 
-import kfp
-import kfp.components as comp
-from kfp.components import InputPath, InputTextFile, InputBinaryFile, OutputPath, OutputTextFile, OutputBinaryFile
-from kfp.components.structures import InputSpec, OutputSpec
-from kfp.components._components import _resolve_command_line_and_paths
+import cloud_pipelines.components as comp
+from cloud_pipelines.components import InputPath, InputTextFile, InputBinaryFile, OutputPath, OutputTextFile, OutputBinaryFile
+from cloud_pipelines.components.structures import InputSpec, OutputSpec
+from cloud_pipelines.components._components import _resolve_command_line_and_paths
 
 def add_two_numbers(a: float, b: float) -> float:
     '''Returns sum of two arguments'''
@@ -513,23 +512,6 @@ class PythonOpTestCase(unittest.TestCase):
         ])
 
 
-    def test_handling_list_arguments_containing_pipelineparam(self):
-        '''Checks that lists containing PipelineParam can be properly serialized'''
-        def consume_list(list_param: list) -> int:
-            pass
-
-        import kfp
-        task_factory = comp.func_to_container_op(consume_list)
-        task = task_factory([1, 2, 3, kfp.dsl.PipelineParam("aaa"), 4, 5, 6])
-        resolved_cmd = _resolve_command_line_and_paths(
-            task.component_ref.spec,
-            task.arguments,
-        )
-        full_command_line = resolved_cmd.command + resolved_cmd.args
-        for arg in full_command_line:
-            self.assertNotIn('PipelineParam', arg)
-
-
     def test_handling_base64_pickle_arguments(self):
         def assert_values_are_same(
             obj1: 'Base64Pickle', # noqa: F821
@@ -831,8 +813,6 @@ class PythonOpTestCase(unittest.TestCase):
 
 
     def test_end_to_end_python_component_pipeline(self):
-        import kfp.components as comp
-
         #Defining the Python function
         def add(a: float, b: float) -> float:
             '''Returns sum of two arguments'''
